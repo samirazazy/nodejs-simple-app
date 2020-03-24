@@ -1,7 +1,9 @@
-const fs = require("fs");
+const fs = require('fs');
 const http = require('http');
 const url = require('url');
-const replacTemplate = require('./modules/replaceTemplate')
+const slugify = require('slugify');
+
+const replacTemplate = require('./modules/replaceTemplate');
 // Blocking, synchronous way
 // const textIn = fs.readFileSync("./txt/input.txt", "utf-8");
 // console.log(textIn);
@@ -26,21 +28,24 @@ const replacTemplate = require('./modules/replaceTemplate')
 
 ///////////////////////////////
 // server
-const overview = fs.readFileSync(`${__dirname}/templates/overview.html`, 'utf-8')
-const product = fs.readFileSync(`${__dirname}/templates/product.html`, 'utf-8')
-const card = fs.readFileSync(`${__dirname}/templates/card.html`, 'utf-8')
+const overview = fs.readFileSync(
+  `${__dirname}/templates/overview.html`,
+  'utf-8'
+);
+const product = fs.readFileSync(`${__dirname}/templates/product.html`, 'utf-8');
+const card = fs.readFileSync(`${__dirname}/templates/card.html`, 'utf-8');
 
-const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8')
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data);
 
+const slugs = dataObj.map(el => slugify(el.productName, { lower: true }));
+console.log(slugs);
 
 const server = http.createServer((req, res) => {
   // console.log(req);
   // console.log(req.url);
 
-  const { query, pathname } = url.parse(req.url, true)
-
-
+  const { query, pathname } = url.parse(req.url, true);
 
   //overview
   if (pathname === '/' || pathname === '/overview') {
@@ -52,17 +57,14 @@ const server = http.createServer((req, res) => {
 
     //product
   } else if (pathname === '/product') {
-
     res.writeHead(200, { 'Content-type': 'text.html' });
     const chosenProduct = dataObj[query.id];
     const viewProduct = replacTemplate(product, chosenProduct);
     res.end(viewProduct);
 
-
     //api
-
   } else if (pathname === '/api') {
-    res.writeHead(200, { 'Content-type': 'application/json' })
+    res.writeHead(200, { 'Content-type': 'application/json' });
     res.end(data);
 
     //not found
@@ -70,10 +72,9 @@ const server = http.createServer((req, res) => {
     res.writeHead(404, {
       'Content-type': 'text/html',
       'my-own-header': 'hello-world'
-    })
+    });
     res.end('<h1>page not found!</h1>');
   }
-
 });
 
 server.listen(8000, '127.0.0.1', () => {
